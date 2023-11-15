@@ -82,7 +82,6 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			demoGame.level = gameMap2
 		}
 	}
-
 	return nil
 }
 
@@ -155,7 +154,6 @@ func main() {
 func (demoGame AnimatedSpriteDemo3) Layout(outsideWidth int, outsideHeight int) (screenWidth int, screenHeight int) {
 	return outsideWidth, outsideHeight
 }
-
 func makeEbitenImagesFromMap(tiledMap tiled.Map) map[uint32]*ebiten.Image {
 	idToImage := make(map[uint32]*ebiten.Image)
 	for _, tile := range tiledMap.Tilesets[0].Tiles {
@@ -167,7 +165,6 @@ func makeEbitenImagesFromMap(tiledMap tiled.Map) map[uint32]*ebiten.Image {
 	}
 	return idToImage
 }
-
 func LoadEmbeddedImage(folderName string, imageName string) *ebiten.Image {
 	embeddedFile, err := EmbeddedAssets.Open(path.Join("assets", folderName, imageName))
 	if err != nil {
