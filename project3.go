@@ -70,7 +70,17 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 		}
 	}
 	if demoGame.playerXLoc >= 950 {
-		demoGame.levels = 1
+		if demoGame.levels == 0 {
+			gameMap2, err := tiled.LoadFile(map2Path)
+			if err != nil {
+				fmt.Printf("error parsing map: %s", err.Error())
+				return err
+			}
+			demoGame.levels = 1
+			demoGame.playerXLoc = 64
+			demoGame.playerYLoc = 448
+			demoGame.level = gameMap2
+		}
 	}
 
 	return nil
