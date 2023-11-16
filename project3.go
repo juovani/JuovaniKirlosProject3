@@ -58,7 +58,7 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			demoGame.playerXLoc -= 7
 		} else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) && demoGame.playerXLoc < 1000-GUY_FRAME_WIDTH {
 			demoGame.direction = RIGHT
-			demoGame.playerXLoc += 7
+			demoGame.playerXLoc += 10
 		} else if ebiten.IsKeyPressed(ebiten.KeyArrowUp) && demoGame.playerYLoc < 1000-GUY_HEIGHT {
 			demoGame.direction = UP
 			demoGame.playerYLoc -= 7

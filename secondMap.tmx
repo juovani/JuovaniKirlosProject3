@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="15" height="15" tilewidth="64" tileheight="64" infinite="0" nextlayerid="4" nextobjectid="1">
- <tileset firstgid="1" name="secondMap" tilewidth="64" tileheight="64" tilecount="11" columns="0">
+ <tileset firstgid="1" name="secondMap" tilewidth="64" tileheight="64" tilecount="12" columns="0">
   <grid orientation="orthogonal" width="1" height="1"/>
   <tile id="1">
    <image width="64" height="64" source="assets/dirt.png"/>
@@ -35,6 +35,9 @@
   <tile id="14">
    <image width="64" height="64" source="assets/bricksx64.png"/>
   </tile>
+  <tile id="15">
+   <image width="64" height="64" source="assets/RockTile.png"/>
+  </tile>
  </tileset>
  <layer id="1" name="Tile Layer 1" width="15" height="15">
   <data encoding="csv">
@@ -42,8 +45,8 @@
 0,0,0,0,10,2,10,2,2,2,2,2,2,2,0,
 0,0,0,0,2,10,2,2,10,2,10,2,10,2,0,
 0,0,0,0,2,2,10,2,2,2,2,10,2,2,0,
-0,0,0,0,0,0,2,2,10,2,2,2,10,2,0,
-0,2,10,2,2,2,10,2,2,2,10,2,2,10,0,
+0,0,0,0,0,10,2,2,10,2,2,2,10,2,0,
+0,2,10,2,10,2,10,2,2,2,10,2,2,10,0,
 0,2,2,10,2,2,2,2,10,2,2,10,2,2,0,
 0,10,2,2,2,10,2,10,2,2,2,2,2,2,0,
 0,2,2,2,10,2,2,2,2,10,2,2,10,2,0,
@@ -61,7 +64,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,
-8,8,8,8,8,8,0,0,0,0,0,0,0,0,8,
+8,8,8,8,8,0,0,0,0,0,0,0,0,0,8,
 8,0,0,0,0,0,0,0,0,0,0,0,0,0,8,
 8,0,0,0,0,0,0,0,0,0,0,0,0,0,8,
 8,0,0,0,0,0,0,0,0,0,0,0,0,0,8,
