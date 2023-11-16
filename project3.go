@@ -55,16 +55,16 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) && demoGame.playerXLoc > 0 {
 			demoGame.direction = LEFT
-			demoGame.playerXLoc -= 5
+			demoGame.playerXLoc -= 7
 		} else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) && demoGame.playerXLoc < 1000-GUY_FRAME_WIDTH {
 			demoGame.direction = RIGHT
-			demoGame.playerXLoc += 5
+			demoGame.playerXLoc += 7
 		} else if ebiten.IsKeyPressed(ebiten.KeyArrowUp) && demoGame.playerYLoc < 1000-GUY_HEIGHT {
 			demoGame.direction = UP
-			demoGame.playerYLoc -= 5
+			demoGame.playerYLoc -= 7
 		} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) && demoGame.playerYLoc > 0 {
 			demoGame.direction = DOWN
-			demoGame.playerYLoc += 5
+			demoGame.playerYLoc += 7
 		} else {
 			demoGame.frame = 0
 		}
@@ -77,8 +77,8 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 				return err
 			}
 			demoGame.levels = 1
-			demoGame.playerXLoc = 64
-			demoGame.playerYLoc = 448
+			demoGame.playerXLoc = 0
+			demoGame.playerYLoc = 128
 			demoGame.level = gameMap2
 		}
 	}
