@@ -26,6 +26,7 @@ const (
 	FRAME_PER_SHEET = 8
 	map1Path        = "firstMap.tmx"
 	map2Path        = "secondMap.tmx"
+	map3Path        = "thirdMap.tmx"
 )
 const (
 	DOWN = iota
@@ -80,6 +81,19 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			demoGame.playerXLoc = 0
 			demoGame.playerYLoc = 128
 			demoGame.level = gameMap2
+		}
+	}
+	if demoGame.playerXLoc >= 950 {
+		if demoGame.levels == 1 {
+			gameMap3, err := tiled.LoadFile(map3Path)
+			if err != nil {
+				fmt.Printf("error parsing map: %s", err.Error())
+				return err
+			}
+			demoGame.levels = 2
+			demoGame.playerXLoc = 0
+			demoGame.playerYLoc = 448
+			demoGame.level = gameMap3
 		}
 	}
 	return nil
