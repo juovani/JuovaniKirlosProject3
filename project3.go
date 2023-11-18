@@ -74,6 +74,7 @@ type AnimatedSpriteDemo3 struct {
 	enemy2      enemy
 	npc1        npc
 	msg         bool
+	toGoBack    bool
 }
 type enemy struct {
 	sprite     *ebiten.Image
@@ -154,32 +155,52 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 		}
 	}
 
-	if demoGame.playerXLoc >= 950 {
-		if demoGame.levels == 0 {
-			gameMap2, err := tiled.LoadFile(map2Path)
-			if err != nil {
-				fmt.Printf("error parsing map: %s", err.Error())
-				return err
-			}
-			demoGame.levels = 1
-			demoGame.playerXLoc = 0
-			demoGame.playerYLoc = 128
-			demoGame.level = gameMap2
+	if demoGame.playerXLoc >= 950 && demoGame.levels == 0 && demoGame.direction == RIGHT {
+		gameMap, err := tiled.LoadFile(map2Path)
+		if err != nil {
+			fmt.Printf("error parsing map: %s", err.Error())
+			return err
 		}
+		demoGame.levels = 1
+		demoGame.playerXLoc = 0
+		demoGame.playerYLoc = 128
+		demoGame.level = gameMap
 	}
-	if demoGame.playerXLoc >= 950 {
-		if demoGame.levels == 1 {
-			gameMap3, err := tiled.LoadFile(map3Path)
-			if err != nil {
-				fmt.Printf("error parsing map: %s", err.Error())
-				return err
-			}
-			demoGame.levels = 2
-			demoGame.playerXLoc = 0
-			demoGame.playerYLoc = 448
-			demoGame.level = gameMap3
+	if demoGame.direction == LEFT && demoGame.levels == 1 && demoGame.playerXLoc <= 0 {
+		gameMap, err := tiled.LoadFile(map1Path)
+		if err != nil {
+			fmt.Printf("error parsing map: %s", err.Error())
+			return err
 		}
+		demoGame.levels = 0
+		demoGame.playerXLoc = 950
+		demoGame.playerYLoc = 448
+		demoGame.level = gameMap
 	}
+
+	if demoGame.playerXLoc >= 950 && demoGame.levels == 1 && demoGame.direction == RIGHT {
+		gameMap, err := tiled.LoadFile(map3Path)
+		if err != nil {
+			fmt.Printf("error parsing map: %s", err.Error())
+			return err
+		}
+		demoGame.levels = 2
+		demoGame.playerXLoc = 0
+		demoGame.playerYLoc = 448
+		demoGame.level = gameMap
+	}
+	if demoGame.direction == LEFT && demoGame.levels == 2 && demoGame.playerXLoc <= 0 {
+		gameMap, err := tiled.LoadFile(map2Path)
+		if err != nil {
+			fmt.Printf("error parsing map: %s", err.Error())
+			return err
+		}
+		demoGame.levels = 1
+		demoGame.playerXLoc = 950
+		demoGame.playerYLoc = 704
+		demoGame.level = gameMap
+	}
+
 	demoGame.msg = false
 	nonPCOne := image.Rect(demoGame.npc1.xLocNPC, demoGame.npc1.yLocNPC, demoGame.npc1.xLocNPC+NPC_FRAME_WIDTH, demoGame.npc1.yLocNPC+NPC_HEIGHT)
 	playerChar := image.Rect(demoGame.playerXLoc, demoGame.playerYLoc, demoGame.playerXLoc+GUY_FRAME_WIDTH, demoGame.playerYLoc+GUY_HEIGHT)
