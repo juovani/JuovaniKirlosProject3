@@ -35,6 +35,19 @@ const (
 	ENEMY_FRAME_PER_SHEET = 3
 )
 const (
+	NPC_FRAME_WIDTH     = 60
+	NPC_HEIGHT          = 80
+	NPC_FRAME_COUNT     = 2
+	NPC_FRAME_PER_SHEET = 3
+)
+const (
+	NPC_UP = iota
+	NPC_RIGHT
+	NPC_DOWN
+	NPC_LEFT
+)
+
+const (
 	ENEMY_UP = iota
 	ENEMY_RIGHT
 	ENEMY_DOWN
@@ -60,11 +73,20 @@ type AnimatedSpriteDemo3 struct {
 	tileHash    map[uint32]*ebiten.Image
 	enemy       enemy
 	enemy2      enemy
+	npc1        npc
 }
 type enemy struct {
 	sprite     *ebiten.Image
 	xLocNnemy  int
 	yLocEnemy  int
+	frame      int
+	frameDelay int
+	direction  int
+}
+type npc struct {
+	sprite     *ebiten.Image
+	xLocNPC    int
+	yLocNPC    int
 	frame      int
 	frameDelay int
 	direction  int
@@ -193,6 +215,15 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 		demoGame.frame*GUY_FRAME_WIDTH+GUY_FRAME_WIDTH,
 		demoGame.direction*GUY_HEIGHT+GUY_HEIGHT)).(*ebiten.Image), &drawOptions)
 
+	if demoGame.levels == 0 {
+		drawOptions.GeoM.Reset()
+		drawOptions.GeoM.Translate(float64(demoGame.npc1.xLocNPC), float64(demoGame.npc1.yLocNPC))
+		screen.DrawImage(demoGame.npc1.sprite.SubImage(image.Rect(demoGame.npc1.frame*NPC_FRAME_WIDTH,
+			demoGame.npc1.direction*NPC_HEIGHT,
+			demoGame.npc1.frame*NPC_FRAME_WIDTH+NPC_FRAME_WIDTH,
+			demoGame.npc1.direction*NPC_HEIGHT+NPC_HEIGHT)).(*ebiten.Image), &drawOptions)
+	}
+
 	if demoGame.levels == 1 {
 		drawOptions.GeoM.Reset()
 		drawOptions.GeoM.Translate(float64(demoGame.enemy.xLocNnemy), float64(demoGame.enemy.yLocEnemy))
@@ -226,6 +257,7 @@ func main() {
 
 	animationGuy := LoadEmbeddedImage("", "player.png")
 	enemyAnimation := LoadEmbeddedImage("", "skelly.png")
+	npc1Animation := LoadEmbeddedImage("", "npc2.png")
 
 	oneLevelGame := AnimatedSpriteDemo3{
 		levels:      0,
@@ -245,6 +277,12 @@ func main() {
 			xLocNnemy: 570,
 			yLocEnemy: 384,
 			direction: ENEMY_LEFT,
+		},
+		npc1: npc{
+			sprite:    npc1Animation,
+			xLocNPC:   384,
+			yLocNPC:   236,
+			direction: NPC_DOWN,
 		},
 	}
 
