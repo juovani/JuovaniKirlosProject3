@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/lafriks/go-tiled"
+	"golang.org/x/image/colornames"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/basicfont"
+
+	//"golang.org/x/image/font/basicfont"
 	"image"
 	"log"
 	"os"
 	"path"
-	//"golang.org/x/sys/unix"
-	//"image"
-	//"log"
-	//"path"
 )
 
 //go:embed assets/*
@@ -35,16 +37,13 @@ const (
 	ENEMY_FRAME_PER_SHEET = 3
 )
 const (
-	NPC_FRAME_WIDTH     = 60
-	NPC_HEIGHT          = 80
-	NPC_FRAME_COUNT     = 2
-	NPC_FRAME_PER_SHEET = 3
+	NPC_FRAME_WIDTH = 60
+	NPC_HEIGHT      = 80
+	//NPC_FRAME_COUNT     = 2
+	//NPC_FRAME_PER_SHEET = 3
 )
 const (
-	NPC_UP = iota
-	NPC_RIGHT
-	NPC_DOWN
-	NPC_LEFT
+	NPC_DOWN = 2
 )
 
 const (
@@ -74,6 +73,7 @@ type AnimatedSpriteDemo3 struct {
 	enemy       enemy
 	enemy2      enemy
 	npc1        npc
+	msg         bool
 }
 type enemy struct {
 	sprite     *ebiten.Image
@@ -180,6 +180,29 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			demoGame.level = gameMap3
 		}
 	}
+	demoGame.msg = false
+	nonPCOne := image.Rect(demoGame.npc1.xLocNPC, demoGame.npc1.yLocNPC, demoGame.npc1.xLocNPC+NPC_FRAME_WIDTH, demoGame.npc1.yLocNPC+NPC_HEIGHT)
+	playerChar := image.Rect(demoGame.playerXLoc, demoGame.playerYLoc, demoGame.playerXLoc+GUY_FRAME_WIDTH, demoGame.playerYLoc+GUY_HEIGHT)
+	if playerChar.Overlaps(nonPCOne) {
+		demoGame.msg = true
+	} else {
+		demoGame.msg = false
+	}
+	//if playerChar.Overlaps(nonPCOne) && demoGame.direction == RIGHT {
+	//	demoGame.playerXLoc = demoGame.playerXLoc - NPC_FRAME_WIDTH + GUY_FRAME_WIDTH
+	//	demoGame.msg = true
+	//} else if playerChar.Overlaps(nonPCOne) && demoGame.direction == LEFT {
+	//	demoGame.playerXLoc = demoGame.playerXLoc + NPC_FRAME_WIDTH - GUY_FRAME_WIDTH
+	//	demoGame.msg = true
+	//} else if playerChar.Overlaps(nonPCOne) && demoGame.direction == UP {
+	//	demoGame.playerYLoc = demoGame.playerYLoc + NPC_HEIGHT - GUY_HEIGHT
+	//	demoGame.msg = true
+	//} else if playerChar.Overlaps(nonPCOne) && demoGame.direction == DOWN {
+	//	demoGame.playerYLoc = demoGame.playerYLoc - NPC_HEIGHT + GUY_HEIGHT
+	//	demoGame.msg = true
+	//} else {
+	//	demoGame.msg = false
+	//}
 
 	return nil
 }
@@ -206,6 +229,12 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 
 			}
 		}
+	}
+	if demoGame.msg == true {
+		DrawCenteredText(screen, basicfont.Face7x13, fmt.Sprintf("Hi Player, you should check the next room \n"+
+			"head over to the end of that dirt bridge\n"+
+			"if you find any enemies please try to kill\n"+
+			"them. they are trying to take over"), 400, 200)
 	}
 
 	drawOptions.GeoM.Reset()
@@ -315,4 +344,10 @@ func LoadEmbeddedImage(folderName string, imageName string) *ebiten.Image {
 		fmt.Println("Error loading tile image:", imageName, err)
 	}
 	return ebitenImage
+}
+func DrawCenteredText(screen *ebiten.Image, font font.Face, s string, cx, cy int) {
+	//from https://github.com/sedyh/ebitengine-cheatsheet
+	bounds := text.BoundString(font, s)
+	x, y := cx-bounds.Min.X-bounds.Dx()/2, cy-bounds.Min.Y-bounds.Dy()/2
+	text.Draw(screen, s, font, x, y, colornames.Black)
 }
