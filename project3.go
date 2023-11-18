@@ -29,6 +29,19 @@ const (
 	map3Path        = "thirdMap.tmx"
 )
 const (
+	ENEMY_FRAME_WIDTH     = 90
+	ENEMY_HEIGHT          = 90
+	ENEMY_FRAME_COUNT     = 4
+	ENEMY_FRAME_PER_SHEET = 3
+)
+const (
+	ENEMY_UP = iota
+	ENEMY_RIGHT
+	ENEMY_DOWN
+	ENEMY_LEFT
+)
+
+const (
 	DOWN = iota
 	UP
 	LEFT
@@ -45,6 +58,16 @@ type AnimatedSpriteDemo3 struct {
 	level       *tiled.Map
 	levels      int
 	tileHash    map[uint32]*ebiten.Image
+	enemy       enemy
+	enemy2      enemy
+}
+type enemy struct {
+	sprite     *ebiten.Image
+	xLocNnemy  int
+	yLocEnemy  int
+	frame      int
+	frameDelay int
+	direction  int
 }
 
 func (demoGame *AnimatedSpriteDemo3) Update() error {
@@ -70,6 +93,45 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			demoGame.frame = 0
 		}
 	}
+
+	demoGame.enemy.frameDelay += 1
+	if demoGame.enemy.frameDelay%ENEMY_FRAME_COUNT == 0 {
+		demoGame.enemy.frame += 1
+		if demoGame.enemy.frame >= ENEMY_FRAME_PER_SHEET {
+			demoGame.enemy.frame = 0
+		}
+		if demoGame.enemy.direction == ENEMY_RIGHT {
+			demoGame.enemy.xLocNnemy += 3
+			if demoGame.enemy.xLocNnemy >= 350 {
+				demoGame.enemy.direction = ENEMY_LEFT
+			}
+		} else if demoGame.enemy.direction == ENEMY_LEFT {
+			demoGame.enemy.xLocNnemy -= 3
+			if demoGame.enemy.xLocNnemy <= 200 {
+				demoGame.enemy.direction = ENEMY_RIGHT
+			}
+		}
+	}
+
+	demoGame.enemy2.frameDelay += 1
+	if demoGame.enemy2.frameDelay%ENEMY_FRAME_COUNT == 0 {
+		demoGame.enemy2.frame += 1
+		if demoGame.enemy2.frame >= ENEMY_FRAME_PER_SHEET {
+			demoGame.enemy2.frame = 0
+		}
+		if demoGame.enemy2.direction == ENEMY_RIGHT {
+			demoGame.enemy2.xLocNnemy += 3
+			if demoGame.enemy2.xLocNnemy >= 750 {
+				demoGame.enemy2.direction = ENEMY_LEFT
+			}
+		} else if demoGame.enemy2.direction == ENEMY_LEFT {
+			demoGame.enemy2.xLocNnemy -= 3
+			if demoGame.enemy2.xLocNnemy <= 570 {
+				demoGame.enemy2.direction = ENEMY_RIGHT
+			}
+		}
+	}
+
 	if demoGame.playerXLoc >= 950 {
 		if demoGame.levels == 0 {
 			gameMap2, err := tiled.LoadFile(map2Path)
@@ -96,6 +158,7 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			demoGame.level = gameMap3
 		}
 	}
+
 	return nil
 }
 
@@ -130,10 +193,22 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 		demoGame.frame*GUY_FRAME_WIDTH+GUY_FRAME_WIDTH,
 		demoGame.direction*GUY_HEIGHT+GUY_HEIGHT)).(*ebiten.Image), &drawOptions)
 
-}
+	if demoGame.levels == 1 {
+		drawOptions.GeoM.Reset()
+		drawOptions.GeoM.Translate(float64(demoGame.enemy.xLocNnemy), float64(demoGame.enemy.yLocEnemy))
+		screen.DrawImage(demoGame.enemy.sprite.SubImage(image.Rect(demoGame.enemy.frame*ENEMY_FRAME_WIDTH,
+			demoGame.enemy.direction*ENEMY_HEIGHT,
+			demoGame.enemy.frame*ENEMY_FRAME_WIDTH+ENEMY_FRAME_WIDTH,
+			demoGame.enemy.direction*ENEMY_HEIGHT+ENEMY_HEIGHT)).(*ebiten.Image), &drawOptions)
 
-func (demoGame *AnimatedSpriteDemo3) GetCurrentLevel() int {
-	return demoGame.levels
+		drawOptions.GeoM.Reset()
+		drawOptions.GeoM.Translate(float64(demoGame.enemy2.xLocNnemy), float64(demoGame.enemy2.yLocEnemy))
+		screen.DrawImage(demoGame.enemy2.sprite.SubImage(image.Rect(demoGame.enemy2.frame*ENEMY_FRAME_WIDTH,
+			demoGame.enemy2.direction*ENEMY_HEIGHT,
+			demoGame.enemy2.frame*ENEMY_FRAME_WIDTH+ENEMY_FRAME_WIDTH,
+			demoGame.enemy2.direction*ENEMY_HEIGHT+ENEMY_HEIGHT)).(*ebiten.Image), &drawOptions)
+	}
+
 }
 
 func main() {
@@ -150,6 +225,7 @@ func main() {
 	fmt.Print("type:", fmt.Sprintf("%T", gameMap.Layers[0].Tiles[0]))
 
 	animationGuy := LoadEmbeddedImage("", "player.png")
+	enemyAnimation := LoadEmbeddedImage("", "skelly.png")
 
 	oneLevelGame := AnimatedSpriteDemo3{
 		levels:      0,
@@ -158,6 +234,18 @@ func main() {
 		playerYLoc:  448,
 		level:       gameMap,
 		tileHash:    ebitenImageMap,
+		enemy: enemy{
+			sprite:    enemyAnimation,
+			xLocNnemy: 200,
+			yLocEnemy: 608,
+			direction: ENEMY_RIGHT,
+		},
+		enemy2: enemy{
+			sprite:    enemyAnimation,
+			xLocNnemy: 570,
+			yLocEnemy: 384,
+			direction: ENEMY_LEFT,
+		},
 	}
 
 	err = ebiten.RunGame(&oneLevelGame)
