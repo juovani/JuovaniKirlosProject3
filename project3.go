@@ -154,7 +154,7 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			}
 		}
 	}
-
+	// map switching
 	if demoGame.playerXLoc >= 950 && demoGame.levels == 0 && demoGame.direction == RIGHT {
 		gameMap, err := tiled.LoadFile(map2Path)
 		if err != nil {
@@ -209,21 +209,49 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 	} else {
 		demoGame.msg = false
 	}
-	//if playerChar.Overlaps(nonPCOne) && demoGame.direction == RIGHT {
-	//	demoGame.playerXLoc = demoGame.playerXLoc - NPC_FRAME_WIDTH + GUY_FRAME_WIDTH
-	//	demoGame.msg = true
-	//} else if playerChar.Overlaps(nonPCOne) && demoGame.direction == LEFT {
-	//	demoGame.playerXLoc = demoGame.playerXLoc + NPC_FRAME_WIDTH - GUY_FRAME_WIDTH
-	//	demoGame.msg = true
-	//} else if playerChar.Overlaps(nonPCOne) && demoGame.direction == UP {
-	//	demoGame.playerYLoc = demoGame.playerYLoc + NPC_HEIGHT - GUY_HEIGHT
-	//	demoGame.msg = true
-	//} else if playerChar.Overlaps(nonPCOne) && demoGame.direction == DOWN {
-	//	demoGame.playerYLoc = demoGame.playerYLoc - NPC_HEIGHT + GUY_HEIGHT
-	//	demoGame.msg = true
-	//} else {
-	//	demoGame.msg = false
-	//}
+
+	// tiles collision
+	if demoGame.levels == 0 {
+		for tileY := 0; tileY < demoGame.level.Height; tileY += 1 {
+			for tileX := 0; tileX < demoGame.level.Width; tileX += 1 {
+				tileID := demoGame.level.Layers[1].Tiles[tileY*demoGame.level.Width+tileX].ID
+
+				if tileID == 3 || tileID == 10 {
+					block4 := image.Rect(tileX*64, tileY*64, (tileX*64)+64, (tileY*64)+64)
+					player := image.Rect(demoGame.playerXLoc, demoGame.playerYLoc, demoGame.playerXLoc+GUY_FRAME_WIDTH, demoGame.playerYLoc+GUY_HEIGHT)
+					if player.Overlaps(block4) && demoGame.direction == DOWN {
+						demoGame.playerYLoc -= 2
+					} else if player.Overlaps(block4) && demoGame.direction == RIGHT {
+						demoGame.playerXLoc -= 2
+					} else if player.Overlaps(block4) && demoGame.direction == UP {
+						demoGame.playerYLoc += 2
+					} else if player.Overlaps(block4) && demoGame.direction == LEFT {
+						demoGame.playerXLoc += 2
+					}
+				}
+			}
+		}
+	} else if demoGame.levels == 1 || demoGame.levels == 2 {
+		for tileY := 0; tileY < demoGame.level.Height; tileY += 1 {
+			for tileX := 0; tileX < demoGame.level.Width; tileX += 1 {
+				tileID := demoGame.level.Layers[1].Tiles[tileY*demoGame.level.Width+tileX].ID
+
+				if tileID == 1 || tileID == 8 {
+					block4 := image.Rect(tileX*64, tileY*64, (tileX*64)+64, (tileY*64)+64)
+					player := image.Rect(demoGame.playerXLoc, demoGame.playerYLoc, demoGame.playerXLoc+GUY_FRAME_WIDTH, demoGame.playerYLoc+GUY_HEIGHT)
+					if player.Overlaps(block4) && demoGame.direction == DOWN {
+						demoGame.playerYLoc -= 2
+					} else if player.Overlaps(block4) && demoGame.direction == RIGHT {
+						demoGame.playerXLoc -= 2
+					} else if player.Overlaps(block4) && demoGame.direction == UP {
+						demoGame.playerYLoc += 2
+					} else if player.Overlaps(block4) && demoGame.direction == LEFT {
+						demoGame.playerXLoc += 2
+					}
+				}
+			}
+		}
+	}
 
 	return nil
 }
@@ -251,7 +279,7 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
-	if demoGame.msg == true {
+	if demoGame.msg == true && demoGame.levels == 0 {
 		DrawCenteredText(screen, basicfont.Face7x13, fmt.Sprintf("Hi Player, you should check the next room \n"+
 			"head over to the end of that dirt bridge\n"+
 			"if you find any enemies please try to kill\n"+
