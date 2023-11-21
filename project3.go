@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/lafriks/go-tiled"
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
-
-	//"golang.org/x/image/font/basicfont"
+	"golang.org/x/image/font/opentype"
 	"image"
 	"log"
 	"os"
@@ -31,8 +31,8 @@ const (
 	map3Path        = "thirdMap.tmx"
 )
 const (
-	ENEMY_FRAME_WIDTH     = 90
-	ENEMY_HEIGHT          = 90
+	ENEMY_FRAME_WIDTH     = 72
+	ENEMY_HEIGHT          = 96
 	ENEMY_FRAME_COUNT     = 4
 	ENEMY_FRAME_PER_SHEET = 3
 )
@@ -67,6 +67,7 @@ type AnimatedSpriteDemo3 struct {
 	direction   int
 	frame       int
 	frameDelay  int
+	damage      int
 	level       *tiled.Map
 	levels      int
 	tileHash    map[uint32]*ebiten.Image
@@ -74,7 +75,7 @@ type AnimatedSpriteDemo3 struct {
 	enemy2      enemy
 	npc1        npc
 	msg         bool
-	toGoBack    bool
+	textFont    font.Face
 }
 type enemy struct {
 	sprite     *ebiten.Image
@@ -83,6 +84,8 @@ type enemy struct {
 	frame      int
 	frameDelay int
 	direction  int
+	health     int
+	alive      bool
 }
 type npc struct {
 	sprite     *ebiten.Image
@@ -210,6 +213,11 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 		demoGame.msg = false
 	}
 
+	enemy1 := image.Rect(demoGame.enemy.xLocNnemy, demoGame.enemy.yLocEnemy, demoGame.enemy.xLocNnemy+ENEMY_FRAME_WIDTH, demoGame.enemy.yLocEnemy+ENEMY_HEIGHT)
+	if playerChar.Overlaps(enemy1) {
+		demoGame.enemy.alive = false
+	}
+
 	// tiles collision
 	if demoGame.levels == 0 {
 		for tileY := 0; tileY < demoGame.level.Height; tileY += 1 {
@@ -279,6 +287,8 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
+
+	DrawCenteredText(screen, demoGame.textFont, fmt.Sprintf("Damage: %d", demoGame.damage), 65, 30)
 	if demoGame.msg == true && demoGame.levels == 0 {
 		DrawCenteredText(screen, basicfont.Face7x13, fmt.Sprintf("Hi Player, you should check the next room \n"+
 			"head over to the end of that dirt bridge\n"+
@@ -303,19 +313,22 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 	}
 
 	if demoGame.levels == 1 {
-		drawOptions.GeoM.Reset()
-		drawOptions.GeoM.Translate(float64(demoGame.enemy.xLocNnemy), float64(demoGame.enemy.yLocEnemy))
-		screen.DrawImage(demoGame.enemy.sprite.SubImage(image.Rect(demoGame.enemy.frame*ENEMY_FRAME_WIDTH,
-			demoGame.enemy.direction*ENEMY_HEIGHT,
-			demoGame.enemy.frame*ENEMY_FRAME_WIDTH+ENEMY_FRAME_WIDTH,
-			demoGame.enemy.direction*ENEMY_HEIGHT+ENEMY_HEIGHT)).(*ebiten.Image), &drawOptions)
-
-		drawOptions.GeoM.Reset()
-		drawOptions.GeoM.Translate(float64(demoGame.enemy2.xLocNnemy), float64(demoGame.enemy2.yLocEnemy))
-		screen.DrawImage(demoGame.enemy2.sprite.SubImage(image.Rect(demoGame.enemy2.frame*ENEMY_FRAME_WIDTH,
-			demoGame.enemy2.direction*ENEMY_HEIGHT,
-			demoGame.enemy2.frame*ENEMY_FRAME_WIDTH+ENEMY_FRAME_WIDTH,
-			demoGame.enemy2.direction*ENEMY_HEIGHT+ENEMY_HEIGHT)).(*ebiten.Image), &drawOptions)
+		if demoGame.enemy.alive == true {
+			drawOptions.GeoM.Reset()
+			drawOptions.GeoM.Translate(float64(demoGame.enemy.xLocNnemy), float64(demoGame.enemy.yLocEnemy))
+			screen.DrawImage(demoGame.enemy.sprite.SubImage(image.Rect(demoGame.enemy.frame*ENEMY_FRAME_WIDTH,
+				demoGame.enemy.direction*ENEMY_HEIGHT,
+				demoGame.enemy.frame*ENEMY_FRAME_WIDTH+ENEMY_FRAME_WIDTH,
+				demoGame.enemy.direction*ENEMY_HEIGHT+ENEMY_HEIGHT)).(*ebiten.Image), &drawOptions)
+		}
+		if demoGame.enemy2.alive == true {
+			drawOptions.GeoM.Reset()
+			drawOptions.GeoM.Translate(float64(demoGame.enemy2.xLocNnemy), float64(demoGame.enemy2.yLocEnemy))
+			screen.DrawImage(demoGame.enemy2.sprite.SubImage(image.Rect(demoGame.enemy2.frame*ENEMY_FRAME_WIDTH,
+				demoGame.enemy2.direction*ENEMY_HEIGHT,
+				demoGame.enemy2.frame*ENEMY_FRAME_WIDTH+ENEMY_FRAME_WIDTH,
+				demoGame.enemy2.direction*ENEMY_HEIGHT+ENEMY_HEIGHT)).(*ebiten.Image), &drawOptions)
+		}
 	}
 
 }
@@ -334,8 +347,10 @@ func main() {
 	fmt.Print("type:", fmt.Sprintf("%T", gameMap.Layers[0].Tiles[0]))
 
 	animationGuy := LoadEmbeddedImage("", "player.png")
-	enemyAnimation := LoadEmbeddedImage("", "skelly.png")
+	enemyAnimation := LoadEmbeddedImage("", "earthEnemy.png")
 	npc1Animation := LoadEmbeddedImage("", "npc2.png")
+
+	drawFont := LoadScoreFont()
 
 	oneLevelGame := AnimatedSpriteDemo3{
 		levels:      0,
@@ -344,17 +359,21 @@ func main() {
 		playerYLoc:  448,
 		level:       gameMap,
 		tileHash:    ebitenImageMap,
+		damage:      1,
+		textFont:    drawFont,
 		enemy: enemy{
 			sprite:    enemyAnimation,
 			xLocNnemy: 200,
 			yLocEnemy: 608,
 			direction: ENEMY_RIGHT,
+			alive:     true,
 		},
 		enemy2: enemy{
 			sprite:    enemyAnimation,
 			xLocNnemy: 570,
 			yLocEnemy: 384,
 			direction: ENEMY_LEFT,
+			alive:     true,
 		},
 		npc1: npc{
 			sprite:    npc1Animation,
@@ -394,8 +413,25 @@ func LoadEmbeddedImage(folderName string, imageName string) *ebiten.Image {
 	}
 	return ebitenImage
 }
+func LoadScoreFont() font.Face {
+	//originally inspired by https://www.fatoldyeti.com/posts/roguelike16/
+	trueTypeFont, err := opentype.Parse(fonts.MPlus1pRegular_ttf)
+	if err != nil {
+		fmt.Println("Error loading font for score:", err)
+	}
+	fontFace, err := opentype.NewFace(trueTypeFont, &opentype.FaceOptions{
+		Size:    24,
+		DPI:     72,
+		Hinting: font.HintingFull,
+	})
+	if err != nil {
+		fmt.Println("Error loading font of correct size for score:", err)
+	}
+	return fontFace
+}
 func DrawCenteredText(screen *ebiten.Image, font font.Face, s string, cx, cy int) {
 	//from https://github.com/sedyh/ebitengine-cheatsheet
+
 	bounds := text.BoundString(font, s)
 	x, y := cx-bounds.Min.X-bounds.Dx()/2, cy-bounds.Min.Y-bounds.Dy()/2
 	text.Draw(screen, s, font, x, y, colornames.Black)
