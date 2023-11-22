@@ -66,6 +66,9 @@ const (
 	COIN_FRAME_COUNT     = 1
 	COIN_FRAME_PER_SHEET = 8
 )
+const (
+	COIN_RIGHT = 0
+)
 
 type AnimatedSpriteDemo3 struct {
 	spriteSheet *ebiten.Image
@@ -90,9 +93,12 @@ type AnimatedSpriteDemo3 struct {
 	coin        coins
 }
 type coins struct {
-	sprite   *ebiten.Image
-	coinXLoc int
-	coinYLoc int
+	sprite     *ebiten.Image
+	frame      int
+	frameDelay int
+	coinXLoc   int
+	coinYLoc   int
+	direction  int
 }
 type shots struct {
 	sprite     *ebiten.Image
@@ -168,26 +174,27 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			}
 		}
 	}
+	if demoGame.enemy1.alive == true {
+		demoGame.enemy1.frameDelay += 1
+		if demoGame.enemy1.frameDelay%ENEMY_FRAME_COUNT == 0 {
+			demoGame.enemy1.frame += 1
+			if demoGame.enemy1.frame >= ENEMY_FRAME_PER_SHEET {
+				demoGame.enemy1.frame = 0
+			}
+			if demoGame.enemy1.direction == ENEMY_RIGHT {
+				demoGame.enemy1.xLocNnemy += 3
+				if demoGame.enemy1.xLocNnemy >= 350 {
+					demoGame.enemy1.direction = ENEMY_LEFT
+				}
+			} else if demoGame.enemy1.direction == ENEMY_LEFT {
+				demoGame.enemy1.xLocNnemy -= 3
+				if demoGame.enemy1.xLocNnemy <= 200 {
+					demoGame.enemy1.direction = ENEMY_RIGHT
+				}
+			}
+		}
 
-	demoGame.enemy1.frameDelay += 1
-	if demoGame.enemy1.frameDelay%ENEMY_FRAME_COUNT == 0 {
-		demoGame.enemy1.frame += 1
-		if demoGame.enemy1.frame >= ENEMY_FRAME_PER_SHEET {
-			demoGame.enemy1.frame = 0
-		}
-		if demoGame.enemy1.direction == ENEMY_RIGHT {
-			demoGame.enemy1.xLocNnemy += 3
-			if demoGame.enemy1.xLocNnemy >= 350 {
-				demoGame.enemy1.direction = ENEMY_LEFT
-			}
-		} else if demoGame.enemy1.direction == ENEMY_LEFT {
-			demoGame.enemy1.xLocNnemy -= 3
-			if demoGame.enemy1.xLocNnemy <= 200 {
-				demoGame.enemy1.direction = ENEMY_RIGHT
-			}
-		}
 	}
-
 	demoGame.enemy2.frameDelay += 1
 	if demoGame.enemy2.frameDelay%ENEMY_FRAME_COUNT == 0 {
 		demoGame.enemy2.frame += 1
@@ -206,6 +213,7 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			}
 		}
 	}
+
 	// map switching
 	if demoGame.playerXLoc >= 950 && demoGame.levels == 0 && demoGame.direction == RIGHT {
 		gameMap, err := tiled.LoadFile(map2Path)
@@ -321,6 +329,15 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 		}
 	}
 
+	demoGame.coin.frameDelay += 1
+	if demoGame.coin.frameDelay%FRAME_COUNT == 0 {
+		demoGame.coin.frame += 1
+		if demoGame.coin.frame >= COIN_FRAME_PER_SHEET {
+			demoGame.coin.frame = 0
+		}
+
+	}
+
 	return nil
 }
 
@@ -397,7 +414,6 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 		//	demoGame.damage++
 		//}
 	}
-
 	DrawCenteredText(screen, demoGame.textFont, fmt.Sprintf("Damage: %d", demoGame.damage), 65, 30)
 	if demoGame.msg == true && demoGame.levels == 0 {
 		DrawCenteredText(screen, basicfont.Face7x13, fmt.Sprintf("Hi Player, you should check the next room \n"+
@@ -405,13 +421,30 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 			"if you find any enemies please try to kill\n"+
 			"them. they are trying to take over"), 400, 200)
 	}
-
 	if demoGame.temp == true {
 		for _, shot := range demoGame.shot {
 			drawOptions.GeoM.Reset()
 			drawOptions.GeoM.Translate(float64(shot.bulletXLoc), float64(shot.bulletYLoc))
 			screen.DrawImage(shot.sprite, &drawOptions)
 		}
+	}
+	if demoGame.levels == 1 && demoGame.enemy1.alive == false {
+		demoGame.coin.coinXLoc = demoGame.enemy1.xLocNnemy
+		demoGame.coin.coinYLoc = demoGame.enemy1.yLocEnemy
+		drawOptions.GeoM.Reset()
+		drawOptions.GeoM.Translate(float64(demoGame.coin.coinXLoc), float64(demoGame.coin.coinYLoc))
+		//frameX := demoGame.coin.coinXLoc * COIN_FRAME_WIDTH
+		//frameY := demoGame.coin.coinYLoc * COIN_HEIGHT
+		println("yes")
+		screen.DrawImage(demoGame.coin.sprite.SubImage(image.Rect(demoGame.coin.frame*COIN_FRAME_WIDTH,
+			demoGame.coin.direction*COIN_HEIGHT,
+			demoGame.coin.frame*COIN_FRAME_WIDTH+COIN_FRAME_WIDTH,
+			demoGame.coin.direction*COIN_HEIGHT+COIN_HEIGHT)).(*ebiten.Image), &drawOptions)
+		//screen.DrawImage(demoGame.enemy2.sprite.SubImage(image.Rect(demoGame.enemy2.frame*ENEMY_FRAME_WIDTH,
+		//	demoGame.enemy2.direction*ENEMY_HEIGHT,
+		//	demoGame.enemy2.frame*ENEMY_FRAME_WIDTH+ENEMY_FRAME_WIDTH,
+		//	demoGame.enemy2.direction*ENEMY_HEIGHT+ENEMY_HEIGHT)).(*ebiten.Image), &drawOptions)
+
 	}
 
 }
@@ -433,6 +466,7 @@ func main() {
 	enemyAnimation := LoadEmbeddedImage("", "earthEnemy.png")
 	npc1Animation := LoadEmbeddedImage("", "npc2.png")
 	shotAnimation := LoadEmbeddedImage("", "laser.png")
+	coinAnimation := LoadEmbeddedImage("", "coin.png")
 
 	drawFont := LoadScoreFont()
 	allShots := make([]shots, 0, 20)
@@ -448,6 +482,10 @@ func main() {
 		textFont:    drawFont,
 		shot:        allShots,
 		bullet:      shotAnimation,
+		coin: coins{
+			sprite:    coinAnimation,
+			direction: COIN_RIGHT,
+		},
 		enemy1: enemy{
 			sprite:    enemyAnimation,
 			xLocNnemy: 200,
