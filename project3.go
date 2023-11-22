@@ -90,7 +90,9 @@ type AnimatedSpriteDemo3 struct {
 	shot        []shots
 	msg         bool
 	textFont    font.Face
-	coin        coins
+	coin1       coins
+	coin2       coins
+	coin3       coins
 }
 type coins struct {
 	sprite     *ebiten.Image
@@ -99,6 +101,7 @@ type coins struct {
 	coinXLoc   int
 	coinYLoc   int
 	direction  int
+	pickedUp   bool
 }
 type shots struct {
 	sprite     *ebiten.Image
@@ -195,21 +198,43 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 		}
 
 	}
-	demoGame.enemy2.frameDelay += 1
-	if demoGame.enemy2.frameDelay%ENEMY_FRAME_COUNT == 0 {
-		demoGame.enemy2.frame += 1
-		if demoGame.enemy2.frame >= ENEMY_FRAME_PER_SHEET {
-			demoGame.enemy2.frame = 0
-		}
-		if demoGame.enemy2.direction == ENEMY_RIGHT {
-			demoGame.enemy2.xLocNnemy += 3
-			if demoGame.enemy2.xLocNnemy >= 750 {
-				demoGame.enemy2.direction = ENEMY_LEFT
+	if demoGame.enemy2.alive == true {
+		demoGame.enemy2.frameDelay += 1
+		if demoGame.enemy2.frameDelay%ENEMY_FRAME_COUNT == 0 {
+			demoGame.enemy2.frame += 1
+			if demoGame.enemy2.frame >= ENEMY_FRAME_PER_SHEET {
+				demoGame.enemy2.frame = 0
 			}
-		} else if demoGame.enemy2.direction == ENEMY_LEFT {
-			demoGame.enemy2.xLocNnemy -= 3
-			if demoGame.enemy2.xLocNnemy <= 570 {
-				demoGame.enemy2.direction = ENEMY_RIGHT
+			if demoGame.enemy2.direction == ENEMY_RIGHT {
+				demoGame.enemy2.xLocNnemy += 3
+				if demoGame.enemy2.xLocNnemy >= 750 {
+					demoGame.enemy2.direction = ENEMY_LEFT
+				}
+			} else if demoGame.enemy2.direction == ENEMY_LEFT {
+				demoGame.enemy2.xLocNnemy -= 3
+				if demoGame.enemy2.xLocNnemy <= 570 {
+					demoGame.enemy2.direction = ENEMY_RIGHT
+				}
+			}
+		}
+	}
+	if demoGame.enemy3.alive == true {
+		demoGame.enemy3.frameDelay += 1
+		if demoGame.enemy3.frameDelay%ENEMY_FRAME_COUNT == 0 {
+			demoGame.enemy3.frame += 1
+			if demoGame.enemy3.frame >= ENEMY_FRAME_PER_SHEET {
+				demoGame.enemy3.frame = 0
+			}
+			if demoGame.enemy3.direction == ENEMY_RIGHT {
+				demoGame.enemy3.xLocNnemy += 3
+				if demoGame.enemy3.xLocNnemy >= 750 {
+					demoGame.enemy3.direction = ENEMY_LEFT
+				}
+			} else if demoGame.enemy3.direction == ENEMY_LEFT {
+				demoGame.enemy3.xLocNnemy -= 3
+				if demoGame.enemy3.xLocNnemy <= 570 {
+					demoGame.enemy3.direction = ENEMY_RIGHT
+				}
 			}
 		}
 	}
@@ -278,8 +303,11 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 		if playerChar.Overlaps(enemy2) {
 			demoGame.enemy2.alive = false
 		}
+		enemy3 := image.Rect(demoGame.enemy3.xLocNnemy, demoGame.enemy3.yLocEnemy, demoGame.enemy3.xLocNnemy+ENEMY_FRAME_WIDTH, demoGame.enemy3.yLocEnemy+ENEMY_HEIGHT)
+		if playerChar.Overlaps(enemy3) {
+			demoGame.enemy3.alive = false
+		}
 	}
-
 	//enemy3 := image.Rect(demoGame.enemy3.xLocNnemy, demoGame.enemy3.yLocEnemy, demoGame.enemy3.xLocNnemy+ENEMY_FRAME_WIDTH, demoGame.enemy3.yLocEnemy+ENEMY_HEIGHT)
 	//if playerChar.Overlaps(enemy3) {
 	//	demoGame.enemy3.alive = false
@@ -328,16 +356,33 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			}
 		}
 	}
-
-	demoGame.coin.frameDelay += 1
-	if demoGame.coin.frameDelay%FRAME_COUNT == 0 {
-		demoGame.coin.frame += 1
-		if demoGame.coin.frame >= COIN_FRAME_PER_SHEET {
-			demoGame.coin.frame = 0
+	if demoGame.coin1.pickedUp == false && demoGame.levels == 1 {
+		demoGame.coin1.frameDelay += 1
+		if demoGame.coin1.frameDelay%FRAME_COUNT == 0 {
+			demoGame.coin1.frame += 1
+			if demoGame.coin1.frame >= COIN_FRAME_PER_SHEET {
+				demoGame.coin1.frame = 0
+			}
 		}
-
 	}
-
+	if demoGame.coin2.pickedUp == false && demoGame.levels == 1 {
+		demoGame.coin2.frameDelay += 1
+		if demoGame.coin2.frameDelay%FRAME_COUNT == 0 {
+			demoGame.coin2.frame += 1
+			if demoGame.coin2.frame >= COIN_FRAME_PER_SHEET {
+				demoGame.coin2.frame = 0
+			}
+		}
+	}
+	if demoGame.coin3.pickedUp == false && demoGame.levels == 1 {
+		demoGame.coin3.frameDelay += 1
+		if demoGame.coin3.frameDelay%FRAME_COUNT == 0 {
+			demoGame.coin3.frame += 1
+			if demoGame.coin3.frame >= COIN_FRAME_PER_SHEET {
+				demoGame.coin3.frame = 0
+			}
+		}
+	}
 	return nil
 }
 
@@ -403,16 +448,16 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 		} else {
 			demoGame.damage++
 		}
-		//if demoGame.enemy3.alive == true {
-		//	drawOptions.GeoM.Reset()
-		//	drawOptions.GeoM.Translate(float64(demoGame.enemy3.xLocNnemy), float64(demoGame.enemy3.yLocEnemy))
-		//	screen.DrawImage(demoGame.enemy3.sprite.SubImage(image.Rect(demoGame.enemy3.frame*ENEMY_FRAME_WIDTH,
-		//		demoGame.enemy3.direction*ENEMY_HEIGHT,
-		//		demoGame.enemy3.frame*ENEMY_FRAME_WIDTH+ENEMY_FRAME_WIDTH,
-		//		demoGame.enemy3.direction*ENEMY_HEIGHT+ENEMY_HEIGHT)).(*ebiten.Image), &drawOptions)
-		//} else {
-		//	demoGame.damage++
-		//}
+		if demoGame.enemy3.alive == true {
+			drawOptions.GeoM.Reset()
+			drawOptions.GeoM.Translate(float64(demoGame.enemy3.xLocNnemy), float64(demoGame.enemy3.yLocEnemy))
+			screen.DrawImage(demoGame.enemy3.sprite.SubImage(image.Rect(demoGame.enemy3.frame*ENEMY_FRAME_WIDTH,
+				demoGame.enemy3.direction*ENEMY_HEIGHT,
+				demoGame.enemy3.frame*ENEMY_FRAME_WIDTH+ENEMY_FRAME_WIDTH,
+				demoGame.enemy3.direction*ENEMY_HEIGHT+ENEMY_HEIGHT)).(*ebiten.Image), &drawOptions)
+		} else {
+			demoGame.damage++
+		}
 	}
 	DrawCenteredText(screen, demoGame.textFont, fmt.Sprintf("Damage: %d", demoGame.damage), 65, 30)
 	if demoGame.msg == true && demoGame.levels == 0 {
@@ -429,22 +474,34 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 		}
 	}
 	if demoGame.levels == 1 && demoGame.enemy1.alive == false {
-		demoGame.coin.coinXLoc = demoGame.enemy1.xLocNnemy
-		demoGame.coin.coinYLoc = demoGame.enemy1.yLocEnemy
+		demoGame.coin1.coinXLoc = demoGame.enemy1.xLocNnemy
+		demoGame.coin1.coinYLoc = demoGame.enemy1.yLocEnemy
 		drawOptions.GeoM.Reset()
-		drawOptions.GeoM.Translate(float64(demoGame.coin.coinXLoc), float64(demoGame.coin.coinYLoc))
-		//frameX := demoGame.coin.coinXLoc * COIN_FRAME_WIDTH
-		//frameY := demoGame.coin.coinYLoc * COIN_HEIGHT
-		println("yes")
-		screen.DrawImage(demoGame.coin.sprite.SubImage(image.Rect(demoGame.coin.frame*COIN_FRAME_WIDTH,
-			demoGame.coin.direction*COIN_HEIGHT,
-			demoGame.coin.frame*COIN_FRAME_WIDTH+COIN_FRAME_WIDTH,
-			demoGame.coin.direction*COIN_HEIGHT+COIN_HEIGHT)).(*ebiten.Image), &drawOptions)
-		//screen.DrawImage(demoGame.enemy2.sprite.SubImage(image.Rect(demoGame.enemy2.frame*ENEMY_FRAME_WIDTH,
-		//	demoGame.enemy2.direction*ENEMY_HEIGHT,
-		//	demoGame.enemy2.frame*ENEMY_FRAME_WIDTH+ENEMY_FRAME_WIDTH,
-		//	demoGame.enemy2.direction*ENEMY_HEIGHT+ENEMY_HEIGHT)).(*ebiten.Image), &drawOptions)
-
+		drawOptions.GeoM.Translate(float64(demoGame.coin1.coinXLoc), float64(demoGame.coin1.coinYLoc))
+		screen.DrawImage(demoGame.coin1.sprite.SubImage(image.Rect(demoGame.coin1.frame*COIN_FRAME_WIDTH,
+			demoGame.coin1.direction*COIN_HEIGHT,
+			demoGame.coin1.frame*COIN_FRAME_WIDTH+COIN_FRAME_WIDTH,
+			demoGame.coin1.direction*COIN_HEIGHT+COIN_HEIGHT)).(*ebiten.Image), &drawOptions)
+	}
+	if demoGame.levels == 1 && demoGame.enemy2.alive == false {
+		demoGame.coin2.coinXLoc = demoGame.enemy2.xLocNnemy
+		demoGame.coin2.coinYLoc = demoGame.enemy2.yLocEnemy
+		drawOptions.GeoM.Reset()
+		drawOptions.GeoM.Translate(float64(demoGame.coin2.coinXLoc), float64(demoGame.coin2.coinYLoc))
+		screen.DrawImage(demoGame.coin2.sprite.SubImage(image.Rect(demoGame.coin2.frame*COIN_FRAME_WIDTH,
+			demoGame.coin2.direction*COIN_HEIGHT,
+			demoGame.coin2.frame*COIN_FRAME_WIDTH+COIN_FRAME_WIDTH,
+			demoGame.coin2.direction*COIN_HEIGHT+COIN_HEIGHT)).(*ebiten.Image), &drawOptions)
+	}
+	if demoGame.levels == 1 && demoGame.enemy3.alive == false {
+		demoGame.coin3.coinXLoc = demoGame.enemy3.xLocNnemy
+		demoGame.coin3.coinYLoc = demoGame.enemy3.yLocEnemy
+		drawOptions.GeoM.Reset()
+		drawOptions.GeoM.Translate(float64(demoGame.coin3.coinXLoc), float64(demoGame.coin3.coinYLoc))
+		screen.DrawImage(demoGame.coin3.sprite.SubImage(image.Rect(demoGame.coin3.frame*COIN_FRAME_WIDTH,
+			demoGame.coin3.direction*COIN_HEIGHT,
+			demoGame.coin3.frame*COIN_FRAME_WIDTH+COIN_FRAME_WIDTH,
+			demoGame.coin3.direction*COIN_HEIGHT+COIN_HEIGHT)).(*ebiten.Image), &drawOptions)
 	}
 
 }
@@ -482,9 +539,20 @@ func main() {
 		textFont:    drawFont,
 		shot:        allShots,
 		bullet:      shotAnimation,
-		coin: coins{
+		coin1: coins{
 			sprite:    coinAnimation,
 			direction: COIN_RIGHT,
+			pickedUp:  false,
+		},
+		coin2: coins{
+			sprite:    coinAnimation,
+			direction: COIN_RIGHT,
+			pickedUp:  false,
+		},
+		coin3: coins{
+			sprite:    coinAnimation,
+			direction: COIN_RIGHT,
+			pickedUp:  false,
 		},
 		enemy1: enemy{
 			sprite:    enemyAnimation,
@@ -502,9 +570,9 @@ func main() {
 		},
 		enemy3: enemy{
 			sprite:    enemyAnimation,
-			xLocNnemy: 320,
+			xLocNnemy: 570,
 			yLocEnemy: 300,
-			direction: ENEMY_UP,
+			direction: ENEMY_LEFT,
 			alive:     true,
 		},
 		npc1: npc{
