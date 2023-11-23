@@ -86,6 +86,7 @@ type AnimatedSpriteDemo3 struct {
 	enemy1      enemy
 	enemy2      enemy
 	enemy3      enemy
+	enemy4      enemy
 	npc1        npc
 	shot        []shots
 	msg         bool
@@ -93,6 +94,7 @@ type AnimatedSpriteDemo3 struct {
 	coin1       coins
 	coin2       coins
 	coin3       coins
+	coin4       coins
 }
 type coins struct {
 	sprite     *ebiten.Image
@@ -238,6 +240,26 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			}
 		}
 	}
+	if demoGame.enemy4.alive == true {
+		demoGame.enemy4.frameDelay += 1
+		if demoGame.enemy4.frameDelay%ENEMY_FRAME_COUNT == 0 {
+			demoGame.enemy4.frame += 1
+			if demoGame.enemy4.frame >= ENEMY_FRAME_PER_SHEET {
+				demoGame.enemy4.frame = 0
+			}
+			if demoGame.enemy4.direction == ENEMY_RIGHT {
+				demoGame.enemy4.xLocNnemy += 3
+				if demoGame.enemy4.xLocNnemy >= 350 {
+					demoGame.enemy4.direction = ENEMY_LEFT
+				}
+			} else if demoGame.enemy4.direction == ENEMY_LEFT {
+				demoGame.enemy4.xLocNnemy -= 3
+				if demoGame.enemy4.xLocNnemy <= 200 {
+					demoGame.enemy4.direction = ENEMY_RIGHT
+				}
+			}
+		}
+	}
 
 	// map switching
 	if demoGame.playerXLoc >= 950 && demoGame.levels == 0 && demoGame.direction == RIGHT {
@@ -306,6 +328,10 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 		enemy3 := image.Rect(demoGame.enemy3.xLocNnemy, demoGame.enemy3.yLocEnemy, demoGame.enemy3.xLocNnemy+ENEMY_FRAME_WIDTH, demoGame.enemy3.yLocEnemy+ENEMY_HEIGHT)
 		if playerChar.Overlaps(enemy3) {
 			demoGame.enemy3.alive = false
+		}
+		enemy4 := image.Rect(demoGame.enemy4.xLocNnemy, demoGame.enemy4.yLocEnemy, demoGame.enemy4.xLocNnemy+ENEMY_FRAME_WIDTH, demoGame.enemy4.yLocEnemy+ENEMY_HEIGHT)
+		if playerChar.Overlaps(enemy4) {
+			demoGame.enemy4.alive = false
 		}
 	}
 	//enemy3 := image.Rect(demoGame.enemy3.xLocNnemy, demoGame.enemy3.yLocEnemy, demoGame.enemy3.xLocNnemy+ENEMY_FRAME_WIDTH, demoGame.enemy3.yLocEnemy+ENEMY_HEIGHT)
@@ -380,6 +406,15 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			demoGame.coin3.frame += 1
 			if demoGame.coin3.frame >= COIN_FRAME_PER_SHEET {
 				demoGame.coin3.frame = 0
+			}
+		}
+	}
+	if demoGame.coin4.pickedUp == false && demoGame.levels == 1 {
+		demoGame.coin4.frameDelay += 1
+		if demoGame.coin4.frameDelay%FRAME_COUNT == 0 {
+			demoGame.coin4.frame += 1
+			if demoGame.coin4.frame >= COIN_FRAME_PER_SHEET {
+				demoGame.coin4.frame = 0
 			}
 		}
 	}
@@ -458,6 +493,16 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 		} else {
 			demoGame.damage++
 		}
+		if demoGame.enemy4.alive == true {
+			drawOptions.GeoM.Reset()
+			drawOptions.GeoM.Translate(float64(demoGame.enemy4.xLocNnemy), float64(demoGame.enemy4.yLocEnemy))
+			screen.DrawImage(demoGame.enemy4.sprite.SubImage(image.Rect(demoGame.enemy4.frame*ENEMY_FRAME_WIDTH,
+				demoGame.enemy4.direction*ENEMY_HEIGHT,
+				demoGame.enemy4.frame*ENEMY_FRAME_WIDTH+ENEMY_FRAME_WIDTH,
+				demoGame.enemy4.direction*ENEMY_HEIGHT+ENEMY_HEIGHT)).(*ebiten.Image), &drawOptions)
+		} else {
+			demoGame.damage++
+		}
 	}
 	DrawCenteredText(screen, demoGame.textFont, fmt.Sprintf("Damage: %d", demoGame.damage), 65, 30)
 	if demoGame.msg == true && demoGame.levels == 0 {
@@ -502,6 +547,16 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 			demoGame.coin3.direction*COIN_HEIGHT,
 			demoGame.coin3.frame*COIN_FRAME_WIDTH+COIN_FRAME_WIDTH,
 			demoGame.coin3.direction*COIN_HEIGHT+COIN_HEIGHT)).(*ebiten.Image), &drawOptions)
+	}
+	if demoGame.levels == 1 && demoGame.enemy4.alive == false {
+		demoGame.coin4.coinXLoc = demoGame.enemy4.xLocNnemy
+		demoGame.coin4.coinYLoc = demoGame.enemy4.yLocEnemy
+		drawOptions.GeoM.Reset()
+		drawOptions.GeoM.Translate(float64(demoGame.coin4.coinXLoc), float64(demoGame.coin4.coinYLoc))
+		screen.DrawImage(demoGame.coin4.sprite.SubImage(image.Rect(demoGame.coin4.frame*COIN_FRAME_WIDTH,
+			demoGame.coin4.direction*COIN_HEIGHT,
+			demoGame.coin4.frame*COIN_FRAME_WIDTH+COIN_FRAME_WIDTH,
+			demoGame.coin4.direction*COIN_HEIGHT+COIN_HEIGHT)).(*ebiten.Image), &drawOptions)
 	}
 
 }
@@ -554,6 +609,11 @@ func main() {
 			direction: COIN_RIGHT,
 			pickedUp:  false,
 		},
+		coin4: coins{
+			sprite:    coinAnimation,
+			direction: COIN_RIGHT,
+			pickedUp:  false,
+		},
 		enemy1: enemy{
 			sprite:    enemyAnimation,
 			xLocNnemy: 200,
@@ -565,13 +625,20 @@ func main() {
 			sprite:    enemyAnimation,
 			xLocNnemy: 570,
 			yLocEnemy: 384,
-			direction: ENEMY_LEFT,
+			direction: ENEMY_RIGHT,
 			alive:     true,
 		},
 		enemy3: enemy{
 			sprite:    enemyAnimation,
 			xLocNnemy: 570,
 			yLocEnemy: 300,
+			direction: ENEMY_LEFT,
+			alive:     true,
+		},
+		enemy4: enemy{
+			sprite:    enemyAnimation,
+			xLocNnemy: 200,
+			yLocEnemy: 384,
 			direction: ENEMY_LEFT,
 			alive:     true,
 		},
