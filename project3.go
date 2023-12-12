@@ -9,14 +9,17 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/lafriks/go-tiled"
+	"github.com/solarlune/paths"
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/font/opentype"
 	"image"
 	"log"
+	"math"
 	"os"
 	"path"
+	"strings"
 )
 
 //go:embed assets/*
@@ -71,30 +74,33 @@ const (
 )
 
 type AnimatedSpriteDemo3 struct {
-	spriteSheet *ebiten.Image
-	bullet      *ebiten.Image
-	playerXLoc  int
-	playerYLoc  int
-	direction   int
-	frame       int
-	frameDelay  int
-	damage      int
-	temp        bool
-	level       *tiled.Map
-	levels      int
-	tileHash    map[uint32]*ebiten.Image
-	enemy1      enemy
-	enemy2      enemy
-	enemy3      enemy
-	enemy4      enemy
-	npc1        npc
-	shot        []shots
-	msg         bool
-	textFont    font.Face
-	coin1       coins
-	coin2       coins
-	coin3       coins
-	coin4       coins
+	spriteSheet    *ebiten.Image
+	bullet         *ebiten.Image
+	playerXLoc     int
+	playerYLoc     int
+	direction      int
+	frame          int
+	frameDelay     int
+	damage         int
+	temp           bool
+	level          *tiled.Map
+	levels         int
+	tileHash       map[uint32]*ebiten.Image
+	pathFindingMap []string
+	pathMap        *paths.Grid
+	path           *paths.Path
+	enemy1         enemy
+	enemy2         enemy
+	enemy3         enemy
+	enemy4         enemy
+	npc1           npc
+	shot           []shots
+	msg            bool
+	textFont       font.Face
+	coin1          coins
+	coin2          coins
+	coin3          coins
+	coin4          coins
 }
 type coins struct {
 	sprite     *ebiten.Image
@@ -147,7 +153,7 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			demoGame.playerXLoc -= 7
 		} else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) && demoGame.playerXLoc < 1000-GUY_FRAME_WIDTH {
 			demoGame.direction = RIGHT
-			demoGame.playerXLoc += 10
+			demoGame.playerXLoc += 7
 		} else if ebiten.IsKeyPressed(ebiten.KeyArrowUp) && demoGame.playerYLoc < 1000-GUY_HEIGHT {
 			demoGame.direction = UP
 			demoGame.playerYLoc -= 7
@@ -179,87 +185,87 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			}
 		}
 	}
-	if demoGame.enemy1.alive == true {
-		demoGame.enemy1.frameDelay += 1
-		if demoGame.enemy1.frameDelay%ENEMY_FRAME_COUNT == 0 {
-			demoGame.enemy1.frame += 1
-			if demoGame.enemy1.frame >= ENEMY_FRAME_PER_SHEET {
-				demoGame.enemy1.frame = 0
-			}
-			if demoGame.enemy1.direction == ENEMY_RIGHT {
-				demoGame.enemy1.xLocNnemy += 3
-				if demoGame.enemy1.xLocNnemy >= 350 {
-					demoGame.enemy1.direction = ENEMY_LEFT
-				}
-			} else if demoGame.enemy1.direction == ENEMY_LEFT {
-				demoGame.enemy1.xLocNnemy -= 3
-				if demoGame.enemy1.xLocNnemy <= 200 {
-					demoGame.enemy1.direction = ENEMY_RIGHT
-				}
-			}
-		}
-
-	}
-	if demoGame.enemy2.alive == true {
-		demoGame.enemy2.frameDelay += 1
-		if demoGame.enemy2.frameDelay%ENEMY_FRAME_COUNT == 0 {
-			demoGame.enemy2.frame += 1
-			if demoGame.enemy2.frame >= ENEMY_FRAME_PER_SHEET {
-				demoGame.enemy2.frame = 0
-			}
-			if demoGame.enemy2.direction == ENEMY_RIGHT {
-				demoGame.enemy2.xLocNnemy += 3
-				if demoGame.enemy2.xLocNnemy >= 750 {
-					demoGame.enemy2.direction = ENEMY_LEFT
-				}
-			} else if demoGame.enemy2.direction == ENEMY_LEFT {
-				demoGame.enemy2.xLocNnemy -= 3
-				if demoGame.enemy2.xLocNnemy <= 570 {
-					demoGame.enemy2.direction = ENEMY_RIGHT
-				}
-			}
-		}
-	}
-	if demoGame.enemy3.alive == true {
-		demoGame.enemy3.frameDelay += 1
-		if demoGame.enemy3.frameDelay%ENEMY_FRAME_COUNT == 0 {
-			demoGame.enemy3.frame += 1
-			if demoGame.enemy3.frame >= ENEMY_FRAME_PER_SHEET {
-				demoGame.enemy3.frame = 0
-			}
-			if demoGame.enemy3.direction == ENEMY_RIGHT {
-				demoGame.enemy3.xLocNnemy += 3
-				if demoGame.enemy3.xLocNnemy >= 750 {
-					demoGame.enemy3.direction = ENEMY_LEFT
-				}
-			} else if demoGame.enemy3.direction == ENEMY_LEFT {
-				demoGame.enemy3.xLocNnemy -= 3
-				if demoGame.enemy3.xLocNnemy <= 570 {
-					demoGame.enemy3.direction = ENEMY_RIGHT
-				}
-			}
-		}
-	}
-	if demoGame.enemy4.alive == true {
-		demoGame.enemy4.frameDelay += 1
-		if demoGame.enemy4.frameDelay%ENEMY_FRAME_COUNT == 0 {
-			demoGame.enemy4.frame += 1
-			if demoGame.enemy4.frame >= ENEMY_FRAME_PER_SHEET {
-				demoGame.enemy4.frame = 0
-			}
-			if demoGame.enemy4.direction == ENEMY_RIGHT {
-				demoGame.enemy4.xLocNnemy += 3
-				if demoGame.enemy4.xLocNnemy >= 350 {
-					demoGame.enemy4.direction = ENEMY_LEFT
-				}
-			} else if demoGame.enemy4.direction == ENEMY_LEFT {
-				demoGame.enemy4.xLocNnemy -= 3
-				if demoGame.enemy4.xLocNnemy <= 200 {
-					demoGame.enemy4.direction = ENEMY_RIGHT
-				}
-			}
-		}
-	}
+	//if demoGame.enemy1.alive == true {
+	//	demoGame.enemy1.frameDelay += 1
+	//	if demoGame.enemy1.frameDelay%ENEMY_FRAME_COUNT == 0 {
+	//		demoGame.enemy1.frame += 1
+	//		if demoGame.enemy1.frame >= ENEMY_FRAME_PER_SHEET {
+	//			demoGame.enemy1.frame = 0
+	//		}
+	//		if demoGame.enemy1.direction == ENEMY_RIGHT {
+	//			demoGame.enemy1.xLocNnemy += 3
+	//			if demoGame.enemy1.xLocNnemy >= 350 {
+	//				demoGame.enemy1.direction = ENEMY_LEFT
+	//			}
+	//		} else if demoGame.enemy1.direction == ENEMY_LEFT {
+	//			demoGame.enemy1.xLocNnemy -= 3
+	//			if demoGame.enemy1.xLocNnemy <= 200 {
+	//				demoGame.enemy1.direction = ENEMY_RIGHT
+	//			}
+	//		}
+	//	}
+	//
+	//}
+	//if demoGame.enemy2.alive == true {
+	//	demoGame.enemy2.frameDelay += 1
+	//	if demoGame.enemy2.frameDelay%ENEMY_FRAME_COUNT == 0 {
+	//		demoGame.enemy2.frame += 1
+	//		if demoGame.enemy2.frame >= ENEMY_FRAME_PER_SHEET {
+	//			demoGame.enemy2.frame = 0
+	//		}
+	//		if demoGame.enemy2.direction == ENEMY_RIGHT {
+	//			demoGame.enemy2.xLocNnemy += 3
+	//			if demoGame.enemy2.xLocNnemy >= 750 {
+	//				demoGame.enemy2.direction = ENEMY_LEFT
+	//			}
+	//		} else if demoGame.enemy2.direction == ENEMY_LEFT {
+	//			demoGame.enemy2.xLocNnemy -= 3
+	//			if demoGame.enemy2.xLocNnemy <= 570 {
+	//				demoGame.enemy2.direction = ENEMY_RIGHT
+	//			}
+	//		}
+	//	}
+	//}
+	//if demoGame.enemy3.alive == true {
+	//	demoGame.enemy3.frameDelay += 1
+	//	if demoGame.enemy3.frameDelay%ENEMY_FRAME_COUNT == 0 {
+	//		demoGame.enemy3.frame += 1
+	//		if demoGame.enemy3.frame >= ENEMY_FRAME_PER_SHEET {
+	//			demoGame.enemy3.frame = 0
+	//		}
+	//		if demoGame.enemy3.direction == ENEMY_RIGHT {
+	//			demoGame.enemy3.xLocNnemy += 3
+	//			if demoGame.enemy3.xLocNnemy >= 750 {
+	//				demoGame.enemy3.direction = ENEMY_LEFT
+	//			}
+	//		} else if demoGame.enemy3.direction == ENEMY_LEFT {
+	//			demoGame.enemy3.xLocNnemy -= 3
+	//			if demoGame.enemy3.xLocNnemy <= 570 {
+	//				demoGame.enemy3.direction = ENEMY_RIGHT
+	//			}
+	//		}
+	//	}
+	//}
+	//if demoGame.enemy4.alive == true {
+	//	demoGame.enemy4.frameDelay += 1
+	//	if demoGame.enemy4.frameDelay%ENEMY_FRAME_COUNT == 0 {
+	//		demoGame.enemy4.frame += 1
+	//		if demoGame.enemy4.frame >= ENEMY_FRAME_PER_SHEET {
+	//			demoGame.enemy4.frame = 0
+	//		}
+	//		if demoGame.enemy4.direction == ENEMY_RIGHT {
+	//			demoGame.enemy4.xLocNnemy += 3
+	//			if demoGame.enemy4.xLocNnemy >= 350 {
+	//				demoGame.enemy4.direction = ENEMY_LEFT
+	//			}
+	//		} else if demoGame.enemy4.direction == ENEMY_LEFT {
+	//			demoGame.enemy4.xLocNnemy -= 3
+	//			if demoGame.enemy4.xLocNnemy <= 200 {
+	//				demoGame.enemy4.direction = ENEMY_RIGHT
+	//			}
+	//		}
+	//	}
+	//}
 
 	// map switching
 	if demoGame.playerXLoc >= 950 && demoGame.levels == 0 && demoGame.direction == RIGHT {
@@ -418,6 +424,35 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			}
 		}
 	}
+	if demoGame.levels == 1 {
+		startRow := int(demoGame.enemy1.yLocEnemy) / demoGame.level.TileHeight
+		startCol := int(demoGame.enemy1.xLocNnemy) / demoGame.level.TileWidth
+		startCell := demoGame.pathMap.Get(startCol, startRow)
+		endCell := demoGame.pathMap.Get(demoGame.playerXLoc/demoGame.level.TileWidth, demoGame.playerYLoc/demoGame.level.TileHeight)
+		demoGame.path = demoGame.pathMap.GetPathFromCells(startCell, endCell, false, false)
+		if demoGame.path != nil {
+			pathCell := demoGame.path.Current()
+			if math.Abs(float64(pathCell.X*demoGame.level.TileWidth)-(float64(demoGame.enemy1.xLocNnemy))) <= 2 &&
+				math.Abs(float64(pathCell.Y*demoGame.level.TileHeight)-(float64(demoGame.enemy1.yLocEnemy))) <= 2 { //if we are now on the tile we need to be on
+				demoGame.path.Advance()
+			}
+			direction := 0
+			if pathCell.X*demoGame.level.TileWidth > int(demoGame.enemy1.xLocNnemy) {
+				direction = 1
+			} else if pathCell.X*demoGame.level.TileWidth < int(demoGame.enemy1.xLocNnemy) {
+				direction = -1
+			}
+			Ydirection := 0
+			if pathCell.Y*demoGame.level.TileHeight > int(demoGame.enemy1.yLocEnemy) {
+				Ydirection = 1
+			} else if pathCell.Y*demoGame.level.TileHeight < int(demoGame.enemy1.yLocEnemy) {
+				Ydirection = -1
+			}
+			demoGame.enemy1.xLocNnemy += direction * 2
+			demoGame.enemy1.yLocEnemy += Ydirection * 2
+		}
+	}
+
 	return nil
 }
 
@@ -562,7 +597,12 @@ func (demoGame AnimatedSpriteDemo3) Draw(screen *ebiten.Image) {
 }
 
 func main() {
+
 	gameMap, err := tiled.LoadFile(map1Path)
+	pathMap := makeSearchMap(gameMap)
+	searchablePathMap := paths.NewGridFromStringArrays(pathMap, gameMap.TileWidth, gameMap.TileHeight)
+	searchablePathMap.SetWalkable('8', false)
+	searchablePathMap.SetWalkable('1', false)
 	windowWidth := gameMap.Width * gameMap.TileWidth
 	windowHeight := gameMap.Height * gameMap.TileHeight
 	ebiten.SetWindowSize(windowWidth, windowHeight)
@@ -584,16 +624,18 @@ func main() {
 	allShots := make([]shots, 0, 20)
 
 	oneLevelGame := AnimatedSpriteDemo3{
-		levels:      0,
-		spriteSheet: animationGuy,
-		playerXLoc:  256,
-		playerYLoc:  448,
-		level:       gameMap,
-		tileHash:    ebitenImageMap,
-		damage:      1,
-		textFont:    drawFont,
-		shot:        allShots,
-		bullet:      shotAnimation,
+		pathFindingMap: pathMap,
+		pathMap:        searchablePathMap,
+		levels:         0,
+		spriteSheet:    animationGuy,
+		playerXLoc:     256,
+		playerYLoc:     448,
+		level:          gameMap,
+		tileHash:       ebitenImageMap,
+		damage:         1,
+		textFont:       drawFont,
+		shot:           allShots,
+		bullet:         shotAnimation,
 		coin1: coins{
 			sprite:    coinAnimation,
 			direction: COIN_RIGHT,
@@ -703,3 +745,26 @@ func DrawCenteredText(screen *ebiten.Image, font font.Face, s string, cx, cy int
 	x, y := cx-bounds.Min.X-bounds.Dx()/2, cy-bounds.Min.Y-bounds.Dy()/2
 	text.Draw(screen, s, font, x, y, colornames.Black)
 }
+
+func makeSearchMap(tiledMap *tiled.Map) []string {
+	mapAsStringSlice := make([]string, 0, tiledMap.Height) //each row will be its own string
+	row := strings.Builder{}
+	for position, tile := range tiledMap.Layers[0].Tiles {
+		if position%tiledMap.Width == 0 && position > 0 { // we get the 2d array as an unrolled one-d array
+			mapAsStringSlice = append(mapAsStringSlice, row.String())
+			row = strings.Builder{}
+		}
+		row.WriteString(fmt.Sprintf("%d", tile.ID))
+	}
+	mapAsStringSlice = append(mapAsStringSlice, row.String())
+	return mapAsStringSlice
+}
+
+//func check(demoGame AnimatedSpriteDemo3) {
+//
+//	startRow := int(demoGame.enemy1.yLocEnemy) / demoGame.level.TileHeight
+//	startCol := int(demoGame.enemy1.xLocNnemy) / demoGame.level.TileWidth
+//	startCell := demoGame.pathMap.Get(startCol, startRow)
+//	endCell := demoGame.pathMap.Get(demoGame.playerXLoc, demoGame.playerYLoc)
+//	demoGame.path = demoGame.pathMap.GetPathFromCells(startCell, endCell, false, false)
+//}
