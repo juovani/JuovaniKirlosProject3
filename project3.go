@@ -153,7 +153,7 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 			demoGame.playerXLoc -= 7
 		} else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) && demoGame.playerXLoc < 1000-GUY_FRAME_WIDTH {
 			demoGame.direction = RIGHT
-			demoGame.playerXLoc += 7
+			demoGame.playerXLoc += 10
 		} else if ebiten.IsKeyPressed(ebiten.KeyArrowUp) && demoGame.playerYLoc < 1000-GUY_HEIGHT {
 			demoGame.direction = UP
 			demoGame.playerYLoc -= 7
@@ -425,31 +425,31 @@ func (demoGame *AnimatedSpriteDemo3) Update() error {
 		}
 	}
 	if demoGame.levels == 1 {
-		startRow := int(demoGame.enemy1.yLocEnemy) / demoGame.level.TileHeight
-		startCol := int(demoGame.enemy1.xLocNnemy) / demoGame.level.TileWidth
+		startRow := int(demoGame.enemy3.yLocEnemy) / demoGame.level.TileHeight
+		startCol := int(demoGame.enemy3.xLocNnemy) / demoGame.level.TileWidth
 		startCell := demoGame.pathMap.Get(startCol, startRow)
 		endCell := demoGame.pathMap.Get(demoGame.playerXLoc/demoGame.level.TileWidth, demoGame.playerYLoc/demoGame.level.TileHeight)
 		demoGame.path = demoGame.pathMap.GetPathFromCells(startCell, endCell, false, false)
 		if demoGame.path != nil {
 			pathCell := demoGame.path.Current()
-			if math.Abs(float64(pathCell.X*demoGame.level.TileWidth)-(float64(demoGame.enemy1.xLocNnemy))) <= 2 &&
-				math.Abs(float64(pathCell.Y*demoGame.level.TileHeight)-(float64(demoGame.enemy1.yLocEnemy))) <= 2 { //if we are now on the tile we need to be on
+			if math.Abs(float64(pathCell.X*demoGame.level.TileWidth)-(float64(demoGame.enemy3.xLocNnemy))) <= 2 &&
+				math.Abs(float64(pathCell.Y*demoGame.level.TileHeight)-(float64(demoGame.enemy3.yLocEnemy))) <= 2 { //if we are now on the tile we need to be on
 				demoGame.path.Advance()
 			}
 			direction := 0
-			if pathCell.X*demoGame.level.TileWidth > int(demoGame.enemy1.xLocNnemy) {
+			if pathCell.X*demoGame.level.TileWidth > int(demoGame.enemy3.xLocNnemy) {
 				direction = 1
-			} else if pathCell.X*demoGame.level.TileWidth < int(demoGame.enemy1.xLocNnemy) {
+			} else if pathCell.X*demoGame.level.TileWidth < int(demoGame.enemy3.xLocNnemy) {
 				direction = -1
 			}
 			Ydirection := 0
-			if pathCell.Y*demoGame.level.TileHeight > int(demoGame.enemy1.yLocEnemy) {
+			if pathCell.Y*demoGame.level.TileHeight > int(demoGame.enemy3.yLocEnemy) {
 				Ydirection = 1
-			} else if pathCell.Y*demoGame.level.TileHeight < int(demoGame.enemy1.yLocEnemy) {
+			} else if pathCell.Y*demoGame.level.TileHeight < int(demoGame.enemy3.yLocEnemy) {
 				Ydirection = -1
 			}
-			demoGame.enemy1.xLocNnemy += direction * 2
-			demoGame.enemy1.yLocEnemy += Ydirection * 2
+			demoGame.enemy3.xLocNnemy += direction * 2
+			demoGame.enemy3.yLocEnemy += Ydirection * 2
 		}
 	}
 
@@ -674,8 +674,8 @@ func main() {
 			sprite:    enemyAnimation,
 			xLocNnemy: 570,
 			yLocEnemy: 300,
-			direction: ENEMY_LEFT,
-			alive:     true,
+			//direction: ENEMY_LEFT,
+			alive: true,
 		},
 		enemy4: enemy{
 			sprite:    enemyAnimation,
